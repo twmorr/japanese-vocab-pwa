@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>単語帳 · Vocab Drill</title>
+<meta name="description" content="Japanese vocabulary flashcard study app" />
+<meta name="theme-color" content="#1C1A17" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="単語帳" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+  html, body, #root { height: 100%; margin: 0; padding: 0; background: #F1EBDD; overflow-x: hidden; }
+  body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- React + Babel runtime (fetched once, cached by the service worker for offline use) -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script>
+  // ---- Storage shim: mirrors the window.storage.get/set API the app expects,
+  // backed by localStorage so data persists on-device between launches. ----
+  window.storage = {
+    get: async function (key) {
+      try {
+        const v = window.localStorage.getItem(key);
+        return v === null ? null : { key: key, value: v, shared: false };
+      } catch (e) { return null; }
+    },
+    set: async function (key, value) {
+      try {
+        window.localStorage.setItem(key, value);
+        return { key: key, value: value, shared: false };
+      } catch (e) { return null; }
+    },
+    delete: async function (key) {
+      try {
+        window.localStorage.removeItem(key);
+        return { key: key, deleted: true, shared: false };
+      } catch (e) { return null; }
+    },
+    list: async function (prefix) {
+      try {
+        const keys = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const k = window.localStorage.key(i);
+          if (!prefix || k.indexOf(prefix) === 0) keys.push(k);
+        }
+        return { keys: keys, prefix: prefix, shared: false };
+      } catch (e) { return null; }
+    },
+  };
+
+  // Register the service worker for offline support (once served over http/https).
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('service-worker.js').catch(function () {});
+    });
+  }
+</script>
+
+<script type="text/babel" data-presets="react" src="app.jsx"></script>
+<script type="text/babel" data-presets="react">
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>
