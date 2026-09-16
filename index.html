@@ -63,4 +63,27 @@
   // Register the service worker for offline support (once served over http/https).
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('service-wo
+      navigator.serviceWorker.register('service-worker.js').catch(function () {});
+    });
+  }
+</script>
+
+<script type="module">
+  // Manually fetch + transpile app.jsx (avoids Babel's automatic <script type="text/babel">
+  // scanning, whose HTML attributes can't reliably pass preset options like the JSX runtime).
+  async function boot() {
+    const res = await fetch('app.jsx');
+    const source = await res.text();
+    const { code } = Babel.transform(source, {
+      presets: [['react', { runtime: 'classic' }]],
+      filename: 'app.jsx',
+    });
+    // Execute the transpiled component code in global scope.
+    (0, eval)(code);
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(window.App));
+  }
+  boot();
+</script>
+</body>
+</html>
