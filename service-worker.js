@@ -5,9 +5,6 @@ const APP_SHELL = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
-  'https://unpkg.com/react@18/umd/react.production.min.js',
-  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  'https://unpkg.com/@babel/standalone/babel.min.js',
 ];
 
 self.addEventListener('install', (event) => {
@@ -28,9 +25,18 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // Only manage caching for our own same-origin files.
+  // Let cross-origin requests (React/Babel CDN scripts) pass straight through
+  // to the browser's normal network handling — intercepting them here was
+  // causing the CDN scripts to fail to load.
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
+      if (cached) return cached;
+      return fetch(event.request)
         .then((response) => {
           if (response && response.status === 200) {
             const clone = response.clone();
@@ -38,8 +44,14 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => cached);
-      return cached || fetchPromise;
+        .catch(() => {
+          // No cache and network failed: let the browser show its own
+          // offline error instead of crashing with an invalid response.
+          return new Response('Offline and not cached.', {
+            status: 503,
+            statusText: 'Service Unavailable',
+          });
+        });
     })
   );
 });
