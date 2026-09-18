@@ -531,7 +531,7 @@ function StudyCard({ card, index, total, flipped, onFlip, onAnswer, level }) {
         <div key={card.id} className={`flip-inner card-shadow ${flipped ? 'flipped' : ''}`} style={{ width: '100%', height: '100%', borderRadius: 16, background: COLORS.paper2, cursor: 'pointer' }}>
           <div className="flip-face" style={{ padding: 24, textAlign: 'center' }}>
             {card.reading && card.reading !== card.word && (
-              <div className="jp" style={{ fontSize: 16, color: `${COLORS.ink}88`, marginBottom: 6, letterSpacing: 1 }}>{card.reading}</div>
+              <div className="jp-word" style={{ fontSize: 16, color: `${COLORS.ink}88`, marginBottom: 6, letterSpacing: 1 }}>{card.reading}</div>
             )}
             <div className="jp-word" style={{ fontSize: 44, fontWeight: 700, marginBottom: 10 }}>{card.word}</div>
             {card.type && <div style={{ fontSize: 12, color: `${COLORS.ink}66`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{card.type}{card.group ? ` · ${card.group}` : ''}</div>}
