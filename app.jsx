@@ -135,6 +135,8 @@ function App() {
   const [loaded, setLoaded] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
+  const [importSummary, setImportSummary] = useState('');
+  const [dataView, setDataView] = useState('import'); // 'import' | 'manage'
   const [filterType, setFilterType] = useState('all');
 
   // load persisted state
@@ -259,8 +261,15 @@ function App() {
     try {
       const parsed = JSON.parse(importText);
       if (!Array.isArray(parsed)) throw new Error('JSON must be an array of cards');
-      const normalized = parsed.map((c, i) => ({
-        id: String(c.id ?? `imp-${i}-${Date.now()}`),
+
+      // Build a lookup of existing entries so we can skip duplicates.
+      // Two cards are considered "the same word" if their word+reading match
+      // (falls back to word alone if reading is missing).
+      const dupeKey = (c) => `${(c.word || '').trim()}::${(c.reading || '').trim()}`;
+      const existingKeys = new Set(cards.map(dupeKey));
+
+      const incoming = parsed.map((c, i) => ({
+        id: String(c.id ?? `imp-${Date.now()}-${i}`),
         word: c.word ?? '',
         reading: c.reading ?? '',
         meaning: c.meaning ?? '',
@@ -269,11 +278,34 @@ function App() {
         difficulty: c.difficulty ?? 1,
         level: 0,
       }));
-      persistCards(normalized);
+
+      const newOnes = [];
+      const seenThisBatch = new Set();
+      for (const c of incoming) {
+        const key = dupeKey(c);
+        if (!c.word) continue; // skip malformed entries with no word
+        if (existingKeys.has(key) || seenThisBatch.has(key)) continue; // duplicate, skip
+        seenThisBatch.add(key);
+        newOnes.push(c);
+      }
+
+      const merged = [...cards, ...newOnes];
+      persistCards(merged);
       setImportText('');
+      setImportSummary(`Added ${newOnes.length} new word${newOnes.length === 1 ? '' : 's'} to your collection (${incoming.length - newOnes.length} duplicate${incoming.length - newOnes.length === 1 ? '' : 's'} skipped).`);
       setScreen('home');
     } catch (e) {
       setImportError('Could not parse that as JSON: ' + e.message);
+    }
+  }
+
+  function removeCard(id) {
+    const nextCards = cards.filter(c => c.id !== id);
+    persistCards(nextCards);
+    if (progress[id]) {
+      const nextProgress = { ...progress };
+      delete nextProgress[id];
+      persistProgress(nextProgress);
     }
   }
 
@@ -455,14 +487,28 @@ function App() {
       )}
 
       {screen === 'import' && (
-        <ImportView
-          importText={importText}
-          setImportText={setImportText}
-          importError={importError}
-          onImport={handleImport}
-          onExport={exportData}
-          cardCount={cards.length}
-        />
+        <div style={{ width: '100%', maxWidth: 480 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 18, background: COLORS.washiDim, padding: 4, borderRadius: 24, width: 'fit-content' }}>
+            <button className={`tab ${dataView === 'import' ? 'active' : ''}`} onClick={() => setDataView('import')}>Import / Export</button>
+            <button className={`tab ${dataView === 'manage' ? 'active' : ''}`} onClick={() => setDataView('manage')}>Manage words ({cards.length})</button>
+          </div>
+
+          {dataView === 'import' && (
+            <ImportView
+              importText={importText}
+              setImportText={setImportText}
+              importError={importError}
+              importSummary={importSummary}
+              onImport={handleImport}
+              onExport={exportData}
+              cardCount={cards.length}
+            />
+          )}
+
+          {dataView === 'manage' && (
+            <ManageView cards={cards} onRemove={removeCard} />
+          )}
+        </div>
       )}
     </div>
   );
@@ -559,13 +605,18 @@ function StatsView({ cards, progress, onReset, onExport }) {
   );
 }
 
-function ImportView({ importText, setImportText, importError, onImport, onExport, cardCount }) {
+function ImportView({ importText, setImportText, importError, importSummary, onImport, onExport, cardCount }) {
   return (
     <div style={{ width: '100%', maxWidth: 480 }}>
-      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Load your own word list</div>
+      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Add to your word collection</div>
       <div style={{ fontSize: 13, color: `${COLORS.ink}88`, marginBottom: 14, lineHeight: 1.5 }}>
-        Paste a JSON array of cards below. Each card needs <code>word</code>, <code>reading</code>, and <code>meaning</code>. Optional: <code>type</code>, <code>group</code>, <code>difficulty</code>. This replaces your current {cardCount}-card deck and resets progress.
+        Paste a JSON array of cards below. Each card needs <code>word</code>, <code>reading</code>, and <code>meaning</code>. Optional: <code>type</code>, <code>group</code>, <code>difficulty</code>. New words are merged into your current {cardCount}-card collection — anything matching an existing word + reading is skipped as a duplicate, and your progress is never touched.
       </div>
+      {importSummary && (
+        <div style={{ fontSize: 13, color: COLORS.bamboo, background: `${COLORS.bamboo}14`, padding: '10px 12px', borderRadius: 8, marginBottom: 12 }}>
+          {importSummary}
+        </div>
+      )}
       <textarea
         value={importText}
         onChange={e => setImportText(e.target.value)}
@@ -578,11 +629,80 @@ function ImportView({ importText, setImportText, importError, onImport, onExport
       {importError && <div style={{ color: COLORS.seal, fontSize: 12.5, marginBottom: 10 }}>{importError}</div>}
       <div style={{ display: 'flex', gap: 10 }}>
         <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={onImport} disabled={!importText.trim()}>
-          ↑ Import & replace deck
+          ↑ Add new words
         </button>
         <button className="btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={onExport}>
-          ↓ Export current deck
+          ↓ Export current collection
         </button>
+      </div>
+    </div>
+  );
+}
+
+function ManageView({ cards, onRemove }) {
+  const [confirmId, setConfirmId] = useState(null);
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return cards;
+    return cards.filter(c =>
+      (c.word || '').toLowerCase().includes(q) ||
+      (c.reading || '').toLowerCase().includes(q) ||
+      (c.meaning || '').toLowerCase().includes(q)
+    );
+  }, [cards, search]);
+
+  return (
+    <div>
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search word, reading, or meaning…"
+        style={{
+          width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${COLORS.ink}22`,
+          background: COLORS.paper2, fontSize: 13.5, marginBottom: 12, boxSizing: 'border-box',
+        }}
+      />
+      {filtered.length === 0 && (
+        <div style={{ fontSize: 13, color: `${COLORS.ink}66`, textAlign: 'center', padding: '30px 0' }}>
+          {cards.length === 0 ? 'No words yet.' : 'No matches.'}
+        </div>
+      )}
+      <div className="card-shadow" style={{ background: COLORS.paper2, borderRadius: 14, overflow: 'hidden' }}>
+        {filtered.map((c, i) => (
+          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: i < filtered.length - 1 ? `1px solid ${COLORS.ink}0d` : 'none' }}>
+            <div className="jp" style={{ fontSize: 17, fontWeight: 600, width: 78, flexShrink: 0 }}>{c.word}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12.5, color: `${COLORS.ink}99` }}>{c.reading}</div>
+              <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.meaning}</div>
+            </div>
+            {confirmId === c.id ? (
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                <button
+                  onClick={() => { onRemove(c.id); setConfirmId(null); }}
+                  style={{ background: COLORS.seal, color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 12, fontWeight: 600 }}
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setConfirmId(null)}
+                  style={{ background: 'transparent', color: `${COLORS.ink}88`, border: `1px solid ${COLORS.ink}22`, borderRadius: 6, padding: '5px 10px', fontSize: 12 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmId(c.id)}
+                title="Remove this word"
+                style={{ background: 'transparent', color: COLORS.seal, border: `1px solid ${COLORS.seal}44`, borderRadius: 6, padding: '5px 10px', fontSize: 12, flexShrink: 0 }}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
