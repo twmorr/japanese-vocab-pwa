@@ -256,6 +256,13 @@ function App() {
     }
   }
 
+  function goToPrevious() {
+    if (current > 0) {
+      setCurrent(current - 1);
+      setFlipped(false);
+    }
+  }
+
   function handleImport() {
     setImportError('');
     try {
@@ -465,6 +472,7 @@ function App() {
           flipped={flipped}
           onFlip={() => setFlipped(f => !f)}
           onAnswer={answer}
+          onPrevious={goToPrevious}
           level={getLevel(queue[current].id)}
         />
       )}
@@ -515,11 +523,23 @@ function App() {
   );
 }
 
-function StudyCard({ card, index, total, flipped, onFlip, onAnswer, level }) {
+function StudyCard({ card, index, total, flipped, onFlip, onAnswer, onPrevious, level }) {
   const levelColor = level >= 5 ? COLORS.bamboo : level > 0 ? COLORS.gold : `${COLORS.ink}33`;
+  const canGoBack = index > 0;
   return (
     <div style={{ width: '100%', maxWidth: 480 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, fontSize: 13, color: `${COLORS.ink}88` }}>
+        <button
+          onClick={onPrevious}
+          disabled={!canGoBack}
+          style={{
+            background: 'transparent', border: 'none', padding: '4px 8px 4px 0', fontSize: 13,
+            color: canGoBack ? COLORS.ink : `${COLORS.ink}33`, cursor: canGoBack ? 'pointer' : 'default',
+            display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500,
+          }}
+        >
+          ‹ Previous
+        </button>
         <span>{index + 1} / {total}</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: levelColor }} />
