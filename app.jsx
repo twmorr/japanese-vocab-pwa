@@ -559,6 +559,7 @@ function StudyCard({ card, index, total, flipped, onFlip, onAnswer, level }) {
 }
 
 function StatsView({ cards, progress, onReset, onExport }) {
+  const [confirmReset, setConfirmReset] = useState(false);
   const rows = useMemo(() => {
     return [...cards].sort((a, b) => {
       const la = progress[a.id]?.level ?? 0;
@@ -575,7 +576,7 @@ function StatsView({ cards, progress, onReset, onExport }) {
           <button className="btn-ghost" style={{ padding: '6px 12px', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 5 }} onClick={onExport}>
             ↓ Export
           </button>
-          <button className="btn-ghost" style={{ padding: '6px 12px', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 5, color: COLORS.seal, borderColor: `${COLORS.seal}44` }} onClick={onReset}>
+          <button className="btn-ghost" style={{ padding: '6px 12px', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 5, color: COLORS.seal, borderColor: `${COLORS.seal}44` }} onClick={() => setConfirmReset(true)}>
             ↺ Reset
           </button>
         </div>
@@ -601,6 +602,38 @@ function StatsView({ cards, progress, onReset, onExport }) {
           );
         })}
       </div>
+
+      {confirmReset && (
+        <div
+          onClick={() => setConfirmReset(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(28,26,23,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 100,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="card-shadow"
+            style={{ background: COLORS.paper2, borderRadius: 14, padding: 22, maxWidth: 360, width: '100%' }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Reset all progress?</div>
+            <div style={{ fontSize: 13.5, color: `${COLORS.ink}99`, marginBottom: 20, lineHeight: 1.5 }}>
+              This clears every word's memorization level back to New. Your word collection itself won't be touched — only study progress. This can't be undone.
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="btn-ghost" onClick={() => setConfirmReset(false)}>
+                Cancel
+              </button>
+              <button
+                onClick={() => { onReset(); setConfirmReset(false); }}
+                style={{ background: COLORS.seal, color: '#fff', border: 'none', borderRadius: 8, padding: '11px 18px', fontWeight: 600, fontSize: 14 }}
+              >
+                Yes, reset everything
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
