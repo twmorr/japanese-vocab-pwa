@@ -346,9 +346,10 @@ function App() {
       boxSizing: 'border-box',
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@500;700&family=Inter:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         .jp { font-family: 'Noto Serif JP', serif; }
+        .jp-word { font-family: 'Noto Sans JP', sans-serif; }
         .card-shadow { box-shadow: 0 1px 2px rgba(28,26,23,0.06), 0 8px 24px rgba(28,26,23,0.10); }
         .hanko {
           width: 46px; height: 46px; border-radius: 6px;
@@ -532,7 +533,7 @@ function StudyCard({ card, index, total, flipped, onFlip, onAnswer, level }) {
             {card.reading && card.reading !== card.word && (
               <div className="jp" style={{ fontSize: 16, color: `${COLORS.ink}88`, marginBottom: 6, letterSpacing: 1 }}>{card.reading}</div>
             )}
-            <div className="jp" style={{ fontSize: 44, fontWeight: 700, marginBottom: 10 }}>{card.word}</div>
+            <div className="jp-word" style={{ fontSize: 44, fontWeight: 700, marginBottom: 10 }}>{card.word}</div>
             {card.type && <div style={{ fontSize: 12, color: `${COLORS.ink}66`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{card.type}{card.group ? ` · ${card.group}` : ''}</div>}
             <div style={{ position: 'absolute', bottom: 18, fontSize: 12, color: `${COLORS.ink}55` }}>Tap to reveal</div>
           </div>
@@ -588,7 +589,7 @@ function StatsView({ cards, progress, onReset, onExport }) {
           const color = level >= 5 ? COLORS.bamboo : level > 0 ? COLORS.gold : `${COLORS.ink}33`;
           return (
             <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${COLORS.ink}0d` : 'none' }}>
-              <div className="jp" style={{ fontSize: 17, fontWeight: 600, width: 78, flexShrink: 0 }}>{c.word}</div>
+              <div className="jp-word" style={{ fontSize: 17, fontWeight: 600, width: 78, flexShrink: 0 }}>{c.word}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12.5, color: `${COLORS.ink}99` }}>{c.reading}</div>
                 <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.meaning}</div>
@@ -705,7 +706,7 @@ function ManageView({ cards, onRemove }) {
       <div className="card-shadow" style={{ background: COLORS.paper2, borderRadius: 14, overflow: 'hidden' }}>
         {filtered.map((c, i) => (
           <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: i < filtered.length - 1 ? `1px solid ${COLORS.ink}0d` : 'none' }}>
-            <div className="jp" style={{ fontSize: 17, fontWeight: 600, width: 78, flexShrink: 0 }}>{c.word}</div>
+            <div className="jp-word" style={{ fontSize: 17, fontWeight: 600, width: 78, flexShrink: 0 }}>{c.word}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12.5, color: `${COLORS.ink}99` }}>{c.reading}</div>
               <div style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.meaning}</div>
