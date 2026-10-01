@@ -104,8 +104,114 @@ const DEFAULT_VOCAB = [
   {"id":"100","word":"予算","reading":"よさん","meaning":"budget","type":"noun","group":"","difficulty":2,"level":0}
 ];
 
+const KATAKANA_SET = [
+  {"word":"ア","reading":"","meaning":"a","type":"katakana","group":"kana","difficulty":1},
+  {"word":"イ","reading":"","meaning":"i","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ウ","reading":"","meaning":"u","type":"katakana","group":"kana","difficulty":1},
+  {"word":"エ","reading":"","meaning":"e","type":"katakana","group":"kana","difficulty":1},
+  {"word":"オ","reading":"","meaning":"o","type":"katakana","group":"kana","difficulty":1},
+  {"word":"カ","reading":"","meaning":"ka","type":"katakana","group":"kana","difficulty":1},
+  {"word":"キ","reading":"","meaning":"ki","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ク","reading":"","meaning":"ku","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ケ","reading":"","meaning":"ke","type":"katakana","group":"kana","difficulty":1},
+  {"word":"コ","reading":"","meaning":"ko","type":"katakana","group":"kana","difficulty":1},
+  {"word":"サ","reading":"","meaning":"sa","type":"katakana","group":"kana","difficulty":1},
+  {"word":"シ","reading":"","meaning":"shi","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ス","reading":"","meaning":"su","type":"katakana","group":"kana","difficulty":1},
+  {"word":"セ","reading":"","meaning":"se","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ソ","reading":"","meaning":"so","type":"katakana","group":"kana","difficulty":1},
+  {"word":"タ","reading":"","meaning":"ta","type":"katakana","group":"kana","difficulty":1},
+  {"word":"チ","reading":"","meaning":"chi","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ツ","reading":"","meaning":"tsu","type":"katakana","group":"kana","difficulty":1},
+  {"word":"テ","reading":"","meaning":"te","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ト","reading":"","meaning":"to","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ナ","reading":"","meaning":"na","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ニ","reading":"","meaning":"ni","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ヌ","reading":"","meaning":"nu","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ネ","reading":"","meaning":"ne","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ノ","reading":"","meaning":"no","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ハ","reading":"","meaning":"ha","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ヒ","reading":"","meaning":"hi","type":"katakana","group":"kana","difficulty":1},
+  {"word":"フ","reading":"","meaning":"fu","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ヘ","reading":"","meaning":"he","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ホ","reading":"","meaning":"ho","type":"katakana","group":"kana","difficulty":1},
+  {"word":"マ","reading":"","meaning":"ma","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ミ","reading":"","meaning":"mi","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ム","reading":"","meaning":"mu","type":"katakana","group":"kana","difficulty":1},
+  {"word":"メ","reading":"","meaning":"me","type":"katakana","group":"kana","difficulty":1},
+  {"word":"モ","reading":"","meaning":"mo","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ヤ","reading":"","meaning":"ya","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ユ","reading":"","meaning":"yu","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ヨ","reading":"","meaning":"yo","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ラ","reading":"","meaning":"ra","type":"katakana","group":"kana","difficulty":1},
+  {"word":"リ","reading":"","meaning":"ri","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ル","reading":"","meaning":"ru","type":"katakana","group":"kana","difficulty":1},
+  {"word":"レ","reading":"","meaning":"re","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ロ","reading":"","meaning":"ro","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ワ","reading":"","meaning":"wa","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ヲ","reading":"","meaning":"wo","type":"katakana","group":"kana","difficulty":1},
+  {"word":"ン","reading":"","meaning":"n","type":"katakana","group":"kana","difficulty":1},
+];
+
 const LEVELS = ['New', 'Learning', 'Learning', 'Familiar', 'Familiar', 'Mastered'];
 const MAX_LEVEL = 5;
+
+// ---------- Synthesized sound effects (no audio files needed — works offline) ----------
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    _audioCtx = new AC();
+  }
+  if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => {});
+  return _audioCtx;
+}
+
+function playChime() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  [880, 1318.5].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.22 / (i + 1), now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.9);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.95);
+  });
+}
+
+function playFart() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const duration = 0.55;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(140, now);
+  osc.frequency.exponentialRampToValueAtTime(55, now + duration);
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  lfo.type = 'sine';
+  lfo.frequency.value = 38;
+  lfoGain.gain.value = 18;
+  lfo.connect(lfoGain).connect(osc.frequency);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.03);
+  gain.gain.linearRampToValueAtTime(0.22, now + duration * 0.7);
+  gain.gain.linearRampToValueAtTime(0.0001, now + duration);
+  osc.connect(gain).connect(ctx.destination);
+  lfo.start(now);
+  osc.start(now);
+  lfo.stop(now + duration);
+  osc.stop(now + duration);
+}
 
 const COLORS = {
   ink: '#1C1A17',
@@ -126,7 +232,10 @@ function loadState() {
 
 function App() {
   const [cards, setCards] = useState(DEFAULT_VOCAB);
-  const [progress, setProgress] = useState({}); // id -> {level, seen, correct, lastSeen}
+  const [progress, setProgress] = useState({}); // id -> {level, seen, correct, lastSeen} — Japanese→English direction
+  const [progressReverse, setProgressReverse] = useState({}); // same shape, tracked separately — English→Japanese direction
+  const [direction, setDirection] = useState('ja-en'); // 'ja-en' | 'en-ja'
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [screen, setScreen] = useState('home'); // home, study, stats, import
   const [queue, setQueue] = useState([]);
   const [current, setCurrent] = useState(0);
@@ -136,8 +245,12 @@ function App() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
   const [importSummary, setImportSummary] = useState('');
+  const [kanaNotice, setKanaNotice] = useState('');
+  const [pendingRestore, setPendingRestore] = useState(null);
+  const [restoreError, setRestoreError] = useState('');
   const [dataView, setDataView] = useState('import'); // 'import' | 'manage'
   const [filterType, setFilterType] = useState('all');
+  const [sessionSize, setSessionSize] = useState(20);
 
   // load persisted state
   useEffect(() => {
@@ -150,6 +263,22 @@ function App() {
         const savedProgress = await window.storage?.get('vocab-progress');
         if (savedProgress?.value) setProgress(JSON.parse(savedProgress.value));
       } catch (e) {}
+      try {
+        const savedProgressReverse = await window.storage?.get('vocab-progress-reverse');
+        if (savedProgressReverse?.value) setProgressReverse(JSON.parse(savedProgressReverse.value));
+      } catch (e) {}
+      try {
+        const savedDirection = await window.storage?.get('vocab-direction');
+        if (savedDirection?.value) setDirection(JSON.parse(savedDirection.value));
+      } catch (e) {}
+      try {
+        const savedSound = await window.storage?.get('vocab-sound-enabled');
+        if (savedSound?.value !== null && savedSound?.value !== undefined) setSoundEnabled(JSON.parse(savedSound.value));
+      } catch (e) {}
+      try {
+        const savedSize = await window.storage?.get('vocab-session-size');
+        if (savedSize?.value) setSessionSize(JSON.parse(savedSize.value));
+      } catch (e) {}
       setLoaded(true);
     })();
   }, []);
@@ -159,16 +288,50 @@ function App() {
     try { await window.storage?.set('vocab-cards', JSON.stringify(next)); } catch (e) {}
   }, []);
 
+  const chooseSessionSize = useCallback(async (size) => {
+    setSessionSize(size);
+    try { await window.storage?.set('vocab-session-size', JSON.stringify(size)); } catch (e) {}
+  }, []);
+
+  const chooseDirection = useCallback(async (dir) => {
+    setDirection(dir);
+    try { await window.storage?.set('vocab-direction', JSON.stringify(dir)); } catch (e) {}
+  }, []);
+
+  const toggleSound = useCallback(async () => {
+    setSoundEnabled(prev => {
+      const next = !prev;
+      window.storage?.set('vocab-sound-enabled', JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+  }, []);
+
   const persistProgress = useCallback(async (next) => {
     setProgress(next);
     try { await window.storage?.set('vocab-progress', JSON.stringify(next)); } catch (e) {}
   }, []);
 
-  const getLevel = (id) => progress[id]?.level ?? 0;
+  const persistProgressReverse = useCallback(async (next) => {
+    setProgressReverse(next);
+    try { await window.storage?.set('vocab-progress-reverse', JSON.stringify(next)); } catch (e) {}
+  }, []);
+
+  // Whichever direction is currently active determines which progress store
+  // reads/writes go through — this is what keeps the two directions' mastery
+  // levels fully independent of each other.
+  const activeProgress = direction === 'en-ja' ? progressReverse : progress;
+  const persistActiveProgress = direction === 'en-ja' ? persistProgressReverse : persistProgress;
+
+  const getLevel = (id) => activeProgress[id]?.level ?? 0;
 
   const types = useMemo(() => {
     const s = new Set(cards.map(c => c.type).filter(Boolean));
     return ['all', ...Array.from(s)];
+  }, [cards]);
+
+  const hasFullKatakanaSet = useMemo(() => {
+    const owned = new Set(cards.filter(c => c.type === 'katakana').map(c => c.word));
+    return KATAKANA_SET.every(k => owned.has(k.word));
   }, [cards]);
 
   const filteredCards = useMemo(() => {
@@ -186,12 +349,13 @@ function App() {
       else fresh++;
     });
     return { total, mastered, learning, fresh };
-  }, [cards, progress]);
+  }, [cards, progress, progressReverse, direction]);
 
-  function buildQueue(list) {
-    // weight lower-level / less-recently-seen cards higher
+  function buildQueue(list, targetSize) {
+    const size = targetSize === 'all' ? list.length : targetSize;
+    // weight lower-level / less-recently-seen cards higher (using the active direction's progress)
     const weighted = list.map(c => {
-      const p = progress[c.id];
+      const p = activeProgress[c.id];
       const level = p?.level ?? 0;
       const weight = (MAX_LEVEL - level) + 1;
       return { card: c, weight };
@@ -205,22 +369,22 @@ function App() {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
-    // dedupe consecutive & cap to reasonable session size
+    // dedupe consecutive & cap to the requested session size
     const seen = new Set();
     const result = [];
     for (const c of pool) {
-      if (result.length >= 20) break;
+      if (result.length >= size) break;
       if (!seen.has(c.id) || result.length < list.length) {
         result.push(c);
         seen.add(c.id);
       }
     }
-    return result.slice(0, Math.max(10, Math.min(20, list.length)));
+    return result.slice(0, Math.max(1, Math.min(size, list.length)));
   }
 
   function startSession() {
     if (filteredCards.length === 0) return;
-    setQueue(buildQueue(filteredCards));
+    setQueue(buildQueue(filteredCards, sessionSize));
     setCurrent(0);
     setFlipped(false);
     setSessionStats({ correct: 0, wrong: 0 });
@@ -230,12 +394,15 @@ function App() {
   function answer(correct) {
     const card = queue[current];
     if (!card || !flipped) return;
-    const prev = progress[card.id] || { level: 0, seen: 0, correct: 0 };
+    if (soundEnabled) {
+      if (correct) playChime(); else playFart();
+    }
+    const prev = activeProgress[card.id] || { level: 0, seen: 0, correct: 0 };
     const nextLevel = correct
       ? Math.min(MAX_LEVEL, prev.level + 1)
       : Math.max(0, prev.level - 1);
     const nextProgress = {
-      ...progress,
+      ...activeProgress,
       [card.id]: {
         level: nextLevel,
         seen: (prev.seen || 0) + 1,
@@ -243,7 +410,7 @@ function App() {
         lastSeen: Date.now(),
       },
     };
-    persistProgress(nextProgress);
+    persistActiveProgress(nextProgress);
     setSessionStats(s => ({
       correct: s.correct + (correct ? 1 : 0),
       wrong: s.wrong + (correct ? 0 : 1),
@@ -263,47 +430,55 @@ function App() {
     }
   }
 
+  // Shared merge logic: normalizes an array of raw card objects, skips
+  // anything already in the collection (matched by word+reading), and
+  // appends only the genuinely new ones. Returns a short summary string.
+  function mergeIntoCollection(rawArray) {
+    const dupeKey = (c) => `${(c.word || '').trim()}::${(c.reading || '').trim()}`;
+    const existingKeys = new Set(cards.map(dupeKey));
+
+    const incoming = rawArray.map((c, i) => ({
+      id: String(c.id ?? `imp-${Date.now()}-${i}`),
+      word: c.word ?? '',
+      reading: c.reading ?? '',
+      meaning: c.meaning ?? '',
+      type: c.type ?? '',
+      group: c.group ?? '',
+      difficulty: c.difficulty ?? 1,
+      level: 0,
+    }));
+
+    const newOnes = [];
+    const seenThisBatch = new Set();
+    for (const c of incoming) {
+      const key = dupeKey(c);
+      if (!c.word) continue; // skip malformed entries with no word
+      if (existingKeys.has(key) || seenThisBatch.has(key)) continue; // duplicate, skip
+      seenThisBatch.add(key);
+      newOnes.push(c);
+    }
+
+    persistCards([...cards, ...newOnes]);
+    return `Added ${newOnes.length} new item${newOnes.length === 1 ? '' : 's'} to your collection (${incoming.length - newOnes.length} duplicate${incoming.length - newOnes.length === 1 ? '' : 's'} skipped).`;
+  }
+
   function handleImport() {
     setImportError('');
     try {
       const parsed = JSON.parse(importText);
       if (!Array.isArray(parsed)) throw new Error('JSON must be an array of cards');
-
-      // Build a lookup of existing entries so we can skip duplicates.
-      // Two cards are considered "the same word" if their word+reading match
-      // (falls back to word alone if reading is missing).
-      const dupeKey = (c) => `${(c.word || '').trim()}::${(c.reading || '').trim()}`;
-      const existingKeys = new Set(cards.map(dupeKey));
-
-      const incoming = parsed.map((c, i) => ({
-        id: String(c.id ?? `imp-${Date.now()}-${i}`),
-        word: c.word ?? '',
-        reading: c.reading ?? '',
-        meaning: c.meaning ?? '',
-        type: c.type ?? '',
-        group: c.group ?? '',
-        difficulty: c.difficulty ?? 1,
-        level: 0,
-      }));
-
-      const newOnes = [];
-      const seenThisBatch = new Set();
-      for (const c of incoming) {
-        const key = dupeKey(c);
-        if (!c.word) continue; // skip malformed entries with no word
-        if (existingKeys.has(key) || seenThisBatch.has(key)) continue; // duplicate, skip
-        seenThisBatch.add(key);
-        newOnes.push(c);
-      }
-
-      const merged = [...cards, ...newOnes];
-      persistCards(merged);
+      const summary = mergeIntoCollection(parsed);
       setImportText('');
-      setImportSummary(`Added ${newOnes.length} new word${newOnes.length === 1 ? '' : 's'} to your collection (${incoming.length - newOnes.length} duplicate${incoming.length - newOnes.length === 1 ? '' : 's'} skipped).`);
+      setImportSummary(summary);
       setScreen('home');
     } catch (e) {
       setImportError('Could not parse that as JSON: ' + e.message);
     }
+  }
+
+  function loadKatakanaSet() {
+    const summary = mergeIntoCollection(KATAKANA_SET);
+    setKanaNotice(summary);
   }
 
   function removeCard(id) {
@@ -327,8 +502,61 @@ function App() {
     URL.revokeObjectURL(url);
   }
 
+  // Full backup: captures the exact word collection AND the raw progress
+  // tracking data (level, seen, correct, lastSeen per word) so a restore
+  // can fully reconstruct state — unlike exportData above, which only
+  // flattens the current level into each word for reference/sharing.
+  function backupAll() {
+    const payload = {
+      kind: 'vocab-drill-backup',
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      cards,
+      progress,
+      progressReverse,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `vocab-backup-${dateStr}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleBackupFileSelected(file) {
+    setRestoreError('');
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (!parsed || !Array.isArray(parsed.cards) || typeof parsed.progress !== 'object') {
+          throw new Error('This doesn\'t look like a vocab backup file.');
+        }
+        // Older (v1) backups predate the reverse-direction feature and won't have this field.
+        if (typeof parsed.progressReverse !== 'object' || parsed.progressReverse === null) {
+          parsed.progressReverse = {};
+        }
+        setPendingRestore(parsed);
+      } catch (e) {
+        setRestoreError('Could not read that file: ' + e.message);
+      }
+    };
+    reader.onerror = () => setRestoreError('Could not read that file.');
+    reader.readAsText(file);
+  }
+
+  function confirmRestore() {
+    if (!pendingRestore) return;
+    persistCards(pendingRestore.cards);
+    persistProgress(pendingRestore.progress);
+    persistProgressReverse(pendingRestore.progressReverse || {});
+    setPendingRestore(null);
+  }
+
   function resetProgress() {
-    persistProgress({});
+    persistActiveProgress({});
   }
 
   if (!loaded) {
@@ -413,10 +641,23 @@ function App() {
             <div style={{ fontSize: 11.5, color: `${COLORS.ink}88`, marginTop: 1 }}>Vocab Drill</div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 4, background: COLORS.washiDim, padding: 4, borderRadius: 24 }}>
-          <button className={`tab ${screen === 'home' || screen === 'study' || screen === 'sessionEnd' ? 'active' : ''}`} onClick={() => setScreen('home')}>Study</button>
-          <button className={`tab ${screen === 'stats' ? 'active' : ''}`} onClick={() => setScreen('stats')}>Stats</button>
-          <button className={`tab ${screen === 'import' ? 'active' : ''}`} onClick={() => setScreen('import')}>Data</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={toggleSound}
+            title={soundEnabled ? 'Mute sound effects' : 'Unmute sound effects'}
+            style={{
+              background: 'transparent', border: `1.5px solid ${COLORS.ink}22`, borderRadius: '50%',
+              width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 15, color: `${COLORS.ink}99`, flexShrink: 0,
+            }}
+          >
+            {soundEnabled ? '🔔' : '🔕'}
+          </button>
+          <div style={{ display: 'flex', gap: 4, background: COLORS.washiDim, padding: 4, borderRadius: 24 }}>
+            <button className={`tab ${screen === 'home' || screen === 'study' || screen === 'sessionEnd' ? 'active' : ''}`} onClick={() => setScreen('home')}>Study</button>
+            <button className={`tab ${screen === 'stats' ? 'active' : ''}`} onClick={() => setScreen('stats')}>Stats</button>
+            <button className={`tab ${screen === 'import' ? 'active' : ''}`} onClick={() => setScreen('import')}>Data</button>
+          </div>
         </div>
       </div>
 
@@ -442,6 +683,29 @@ function App() {
           </div>
 
           <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, color: `${COLORS.ink}99` }}>Study direction</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[
+                { key: 'ja-en', label: 'Japanese → English' },
+                { key: 'en-ja', label: 'English → Japanese' },
+              ].map(opt => (
+                <button key={opt.key} onClick={() => chooseDirection(opt.key)} className="btn-ghost"
+                  style={{
+                    flex: 1, padding: '9px 10px', fontSize: 12.5,
+                    background: direction === opt.key ? COLORS.ink : 'transparent',
+                    color: direction === opt.key ? COLORS.washi : COLORS.ink,
+                    borderColor: direction === opt.key ? COLORS.ink : `${COLORS.ink}22`,
+                  }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ fontSize: 11.5, color: `${COLORS.ink}66`, marginTop: 6 }}>
+              Each direction tracks its own separate progress — switching won't affect the other.
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, color: `${COLORS.ink}99` }}>Filter by type</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {types.map(t => (
@@ -458,9 +722,43 @@ function App() {
             </div>
           </div>
 
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, color: `${COLORS.ink}99` }}>Cards per session</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[10, 20, 30, 50, 'all'].map(size => (
+                <button key={size} onClick={() => chooseSessionSize(size)} className="btn-ghost"
+                  style={{
+                    padding: '6px 14px', fontSize: 12.5,
+                    background: sessionSize === size ? COLORS.ink : 'transparent',
+                    color: sessionSize === size ? COLORS.washi : COLORS.ink,
+                    borderColor: sessionSize === size ? COLORS.ink : `${COLORS.ink}22`,
+                  }}>
+                  {size === 'all' ? 'All' : size}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <button className="btn-primary" style={{ width: '100%', fontSize: 16, padding: '16px 22px' }} onClick={startSession} disabled={filteredCards.length === 0}>
-            Start session ({Math.min(20, filteredCards.length)} cards)
+            Start session ({sessionSize === 'all' ? filteredCards.length : Math.min(sessionSize, filteredCards.length)} cards)
           </button>
+
+          {!hasFullKatakanaSet && (
+            <button
+              onClick={loadKatakanaSet}
+              style={{
+                width: '100%', marginTop: 12, background: 'transparent', border: `1px dashed ${COLORS.ink}33`,
+                borderRadius: 10, padding: '11px 16px', fontSize: 13, color: `${COLORS.ink}99`, fontWeight: 500,
+              }}
+            >
+              + Add katakana practice set (46 characters)
+            </button>
+          )}
+          {kanaNotice && (
+            <div style={{ fontSize: 12.5, color: COLORS.bamboo, marginTop: 10, textAlign: 'center' }}>
+              {kanaNotice}
+            </div>
+          )}
         </div>
       )}
 
@@ -474,6 +772,7 @@ function App() {
           onAnswer={answer}
           onPrevious={goToPrevious}
           level={getLevel(queue[current].id)}
+          direction={direction}
         />
       )}
 
@@ -492,7 +791,7 @@ function App() {
       )}
 
       {screen === 'stats' && (
-        <StatsView cards={cards} progress={progress} onReset={resetProgress} onExport={exportData} />
+        <StatsView cards={cards} progress={activeProgress} direction={direction} onReset={resetProgress} onExport={exportData} />
       )}
 
       {screen === 'import' && (
@@ -503,15 +802,24 @@ function App() {
           </div>
 
           {dataView === 'import' && (
-            <ImportView
-              importText={importText}
-              setImportText={setImportText}
-              importError={importError}
-              importSummary={importSummary}
-              onImport={handleImport}
-              onExport={exportData}
-              cardCount={cards.length}
-            />
+            <>
+              <ImportView
+                importText={importText}
+                setImportText={setImportText}
+                importError={importError}
+                importSummary={importSummary}
+                onImport={handleImport}
+                onExport={exportData}
+                cardCount={cards.length}
+              />
+              <BackupSection
+                onBackup={backupAll}
+                onFileSelected={handleBackupFileSelected}
+                restoreError={restoreError}
+                cardCount={cards.length}
+                progressCount={Object.keys(progress).length}
+              />
+            </>
           )}
 
           {dataView === 'manage' && (
@@ -519,13 +827,48 @@ function App() {
           )}
         </div>
       )}
+
+      {pendingRestore && (
+        <div
+          onClick={() => setPendingRestore(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(28,26,23,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 100,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="card-shadow"
+            style={{ background: COLORS.paper2, borderRadius: 14, padding: 22, maxWidth: 360, width: '100%' }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Restore this backup?</div>
+            <div style={{ fontSize: 13.5, color: `${COLORS.ink}99`, marginBottom: 20, lineHeight: 1.5 }}>
+              This backup has <b>{pendingRestore.cards.length}</b> words and progress for <b>{Object.keys(pendingRestore.progress || {}).length}</b> of them
+              {pendingRestore.exportedAt ? <> (saved {new Date(pendingRestore.exportedAt).toLocaleDateString()})</> : null}.
+              Restoring will <b>completely replace</b> your current {cards.length}-word collection and all study progress. This can't be undone.
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button className="btn-ghost" onClick={() => setPendingRestore(null)}>
+                Cancel
+              </button>
+              <button
+                onClick={confirmRestore}
+                style={{ background: COLORS.seal, color: '#fff', border: 'none', borderRadius: 8, padding: '11px 18px', fontWeight: 600, fontSize: 14 }}
+              >
+                Yes, restore
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function StudyCard({ card, index, total, flipped, onFlip, onAnswer, onPrevious, level }) {
+function StudyCard({ card, index, total, flipped, onFlip, onAnswer, onPrevious, level, direction }) {
   const levelColor = level >= 5 ? COLORS.bamboo : level > 0 ? COLORS.gold : `${COLORS.ink}33`;
   const canGoBack = index > 0;
+  const isReverse = direction === 'en-ja';
   return (
     <div style={{ width: '100%', maxWidth: 480 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, fontSize: 13, color: `${COLORS.ink}88` }}>
@@ -549,17 +892,35 @@ function StudyCard({ card, index, total, flipped, onFlip, onAnswer, onPrevious, 
 
       <div className="flip-card" style={{ height: 260, marginBottom: 20 }} onClick={onFlip}>
         <div key={card.id} className={`flip-inner card-shadow ${flipped ? 'flipped' : ''}`} style={{ width: '100%', height: '100%', borderRadius: 16, background: COLORS.paper2, cursor: 'pointer' }}>
-          <div className="flip-face" style={{ padding: 24, textAlign: 'center' }}>
-            {card.reading && card.reading !== card.word && (
-              <div className="jp-word" style={{ fontSize: 16, color: `${COLORS.ink}88`, marginBottom: 6, letterSpacing: 1 }}>{card.reading}</div>
-            )}
-            <div className="jp-word" style={{ fontSize: 44, fontWeight: 700, marginBottom: 10 }}>{card.word}</div>
-            {card.type && <div style={{ fontSize: 12, color: `${COLORS.ink}66`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{card.type}{card.group ? ` · ${card.group}` : ''}</div>}
-            <div style={{ position: 'absolute', bottom: 18, fontSize: 12, color: `${COLORS.ink}55` }}>Tap to reveal</div>
-          </div>
-          <div className="flip-face flip-back" style={{ padding: 24, textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 600 }}>{card.meaning}</div>
-          </div>
+          {isReverse ? (
+            <>
+              <div className="flip-face" style={{ padding: 24, textAlign: 'center' }}>
+                <div style={{ fontSize: 30, fontWeight: 700, marginBottom: 10 }}>{card.meaning}</div>
+                {card.type && <div style={{ fontSize: 12, color: `${COLORS.ink}66`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{card.type}{card.group ? ` · ${card.group}` : ''}</div>}
+                <div style={{ position: 'absolute', bottom: 18, fontSize: 12, color: `${COLORS.ink}55` }}>Tap to reveal</div>
+              </div>
+              <div className="flip-face flip-back" style={{ padding: 24, textAlign: 'center' }}>
+                {card.reading && card.reading !== card.word && (
+                  <div className="jp-word" style={{ fontSize: 16, color: `${COLORS.ink}88`, marginBottom: 6, letterSpacing: 1 }}>{card.reading}</div>
+                )}
+                <div className="jp-word" style={{ fontSize: 44, fontWeight: 700 }}>{card.word}</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flip-face" style={{ padding: 24, textAlign: 'center' }}>
+                {card.reading && card.reading !== card.word && (
+                  <div className="jp-word" style={{ fontSize: 16, color: `${COLORS.ink}88`, marginBottom: 6, letterSpacing: 1 }}>{card.reading}</div>
+                )}
+                <div className="jp-word" style={{ fontSize: 44, fontWeight: 700, marginBottom: 10 }}>{card.word}</div>
+                {card.type && <div style={{ fontSize: 12, color: `${COLORS.ink}66`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{card.type}{card.group ? ` · ${card.group}` : ''}</div>}
+                <div style={{ position: 'absolute', bottom: 18, fontSize: 12, color: `${COLORS.ink}55` }}>Tap to reveal</div>
+              </div>
+              <div className="flip-face flip-back" style={{ padding: 24, textAlign: 'center' }}>
+                <div style={{ fontSize: 26, fontWeight: 600 }}>{card.meaning}</div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -579,7 +940,7 @@ function StudyCard({ card, index, total, flipped, onFlip, onAnswer, onPrevious, 
   );
 }
 
-function StatsView({ cards, progress, onReset, onExport }) {
+function StatsView({ cards, progress, direction, onReset, onExport }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const rows = useMemo(() => {
     return [...cards].sort((a, b) => {
@@ -592,7 +953,12 @@ function StatsView({ cards, progress, onReset, onExport }) {
   return (
     <div style={{ width: '100%', maxWidth: 480 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <div style={{ fontSize: 15, fontWeight: 600 }}>All words</div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>All words</div>
+          <div style={{ fontSize: 11.5, color: `${COLORS.ink}66`, marginTop: 1 }}>
+            {direction === 'en-ja' ? 'English → Japanese progress' : 'Japanese → English progress'}
+          </div>
+        </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn-ghost" style={{ padding: '6px 12px', fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 5 }} onClick={onExport}>
             ↓ Export
@@ -637,9 +1003,9 @@ function StatsView({ cards, progress, onReset, onExport }) {
             className="card-shadow"
             style={{ background: COLORS.paper2, borderRadius: 14, padding: 22, maxWidth: 360, width: '100%' }}
           >
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Reset all progress?</div>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Reset {direction === 'en-ja' ? 'English → Japanese' : 'Japanese → English'} progress?</div>
             <div style={{ fontSize: 13.5, color: `${COLORS.ink}99`, marginBottom: 20, lineHeight: 1.5 }}>
-              This clears every word's memorization level back to New. Your word collection itself won't be touched — only study progress. This can't be undone.
+              This clears every word's memorization level back to New for this study direction only. Your word collection and the other direction's progress won't be touched. This can't be undone.
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button className="btn-ghost" onClick={() => setConfirmReset(false)}>
@@ -688,6 +1054,39 @@ function ImportView({ importText, setImportText, importError, importSummary, onI
         <button className="btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={onExport}>
           ↓ Export current collection
         </button>
+      </div>
+    </div>
+  );
+}
+
+function BackupSection({ onBackup, onFileSelected, restoreError, cardCount, progressCount }) {
+  const fileInputRef = React.useRef(null);
+
+  return (
+    <div style={{ marginTop: 28, paddingTop: 24, borderTop: `1px solid ${COLORS.ink}14` }}>
+      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Full backup & restore</div>
+      <div style={{ fontSize: 13, color: `${COLORS.ink}88`, marginBottom: 14, lineHeight: 1.5 }}>
+        Unlike the export above, a full backup also saves your exact study progress (not just the current level), so restoring it — say, after switching phones — brings everything back exactly as it was. You currently have {cardCount} words and progress tracked on {progressCount} of them.
+      </div>
+      {restoreError && <div style={{ color: COLORS.seal, fontSize: 12.5, marginBottom: 10 }}>{restoreError}</div>}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={onBackup}>
+          ↓ Download full backup
+        </button>
+        <button className="btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={() => fileInputRef.current?.click()}>
+          ↑ Restore from backup file
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) onFileSelected(file);
+            e.target.value = ''; // allow re-selecting the same file later
+          }}
+        />
       </div>
     </div>
   );
