@@ -153,6 +153,12 @@ const KATAKANA_SET = [
   {"word":"ン","reading":"","meaning":"n","type":"katakana","group":"kana","difficulty":1},
 ];
 
+// These are character/symbol drills rather than true vocabulary pairs —
+// going English→Japanese doesn't make sense for them (there's no "translation"
+// to recall, just a symbol to recognize), so they're excluded from reverse-mode
+// sessions regardless of the active type filter.
+const FORWARD_ONLY_TYPES = ['katakana', 'number'];
+
 const LEVELS = ['New', 'Learning', 'Learning', 'Familiar', 'Familiar', 'Mastered'];
 const MAX_LEVEL = 5;
 
@@ -324,10 +330,14 @@ function App() {
 
   const getLevel = (id) => activeProgress[id]?.level ?? 0;
 
+  const typeFilterPool = useMemo(() => {
+    return direction === 'en-ja' ? cards.filter(c => !FORWARD_ONLY_TYPES.includes(c.type)) : cards;
+  }, [cards, direction]);
+
   const types = useMemo(() => {
-    const s = new Set(cards.map(c => c.type).filter(Boolean));
+    const s = new Set(typeFilterPool.map(c => c.type).filter(Boolean));
     return ['all', ...Array.from(s)];
-  }, [cards]);
+  }, [typeFilterPool]);
 
   const hasFullKatakanaSet = useMemo(() => {
     const owned = new Set(cards.filter(c => c.type === 'katakana').map(c => c.word));
@@ -335,9 +345,9 @@ function App() {
   }, [cards]);
 
   const filteredCards = useMemo(() => {
-    if (filterType === 'all') return cards;
-    return cards.filter(c => c.type === filterType);
-  }, [cards, filterType]);
+    if (filterType === 'all') return typeFilterPool;
+    return typeFilterPool.filter(c => c.type === filterType);
+  }, [typeFilterPool, filterType]);
 
   const stats = useMemo(() => {
     const total = cards.length;
@@ -716,7 +726,7 @@ function App() {
                     color: filterType === t ? COLORS.washi : COLORS.ink,
                     borderColor: filterType === t ? COLORS.ink : `${COLORS.ink}22`,
                   }}>
-                  {t} {t !== 'all' ? `(${cards.filter(c => c.type === t).length})` : `(${cards.length})`}
+                  {t} {t !== 'all' ? `(${typeFilterPool.filter(c => c.type === t).length})` : `(${typeFilterPool.length})`}
                 </button>
               ))}
             </div>
