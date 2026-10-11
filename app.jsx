@@ -362,34 +362,25 @@ function App() {
   }, [cards, progress, progressReverse, direction]);
 
   function buildQueue(list, targetSize) {
-    const size = targetSize === 'all' ? list.length : targetSize;
-    // weight lower-level / less-recently-seen cards higher (using the active direction's progress)
-    const weighted = list.map(c => {
-      const p = activeProgress[c.id];
-      const level = p?.level ?? 0;
-      const weight = (MAX_LEVEL - level) + 1;
-      return { card: c, weight };
-    });
-    const pool = [];
-    weighted.forEach(({ card, weight }) => {
-      for (let i = 0; i < weight; i++) pool.push(card);
-    });
-    // shuffle
-    for (let i = pool.length - 1; i > 0; i--) {
+    const size = Math.min(targetSize === 'all' ? list.length : targetSize, list.length);
+    // Weighted sampling without replacement: each card gets a random key
+    // skewed by its weight (lower level → higher weight → more likely to be
+    // picked), and the top `size` keys win. Every card appears at most once.
+    const picked = list
+      .map(c => {
+        const level = activeProgress[c.id]?.level ?? 0;
+        const weight = (MAX_LEVEL - level) + 1;
+        return { card: c, key: Math.pow(Math.random(), 1 / weight) };
+      })
+      .sort((a, b) => b.key - a.key)
+      .slice(0, size)
+      .map(x => x.card);
+    // Shuffle so the session order doesn't front-load the weakest cards.
+    for (let i = picked.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
+      [picked[i], picked[j]] = [picked[j], picked[i]];
     }
-    // dedupe consecutive & cap to the requested session size
-    const seen = new Set();
-    const result = [];
-    for (const c of pool) {
-      if (result.length >= size) break;
-      if (!seen.has(c.id) || result.length < list.length) {
-        result.push(c);
-        seen.add(c.id);
-      }
-    }
-    return result.slice(0, Math.max(1, Math.min(size, list.length)));
+    return picked;
   }
 
   function startSession() {
